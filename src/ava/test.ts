@@ -6,12 +6,21 @@ import { at } from 'apil';
 
 test.cb.failing('accept challenge', t => {
 
-  function playStateUpdate(gameFull: at.GameFull) {
-    console.log(gameFull.state);
-    return undefined;
+  function full(gameFull: at.GameFull) {
+    console.log(gameFull);
+    return Promise.resolve([]);
   };
+
+  function state(gameState: at.GameState) {
+    console.log(gameState);
+    return Promise.resolve([]);
+  }
+
+  function chat(chatLine: at.ChatLine) {
+    return Promise.resolve([]);
+  }
   
-  let bot = new Bot(token, playStateUpdate);
+  let bot = new Bot(token, {full, state, chat});
 
   bot.acceptChallenges({});
   

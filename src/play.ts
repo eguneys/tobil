@@ -1,17 +1,15 @@
 import * as tot from './types';
 import { at, Bot as BotApi } from 'apil';
 
-export type PlayStateUpdate = (_: at.GameFull) => at.Uci | undefined
-
 export default class Play {
 
   gameId: at.GameId
   abort?: () => void
   gameFull?: at.GameFull
-  stateUpdate: PlayStateUpdate
+  stateUpdate: tot.RawPlayStateUpdate
   api: BotApi
 
-  constructor(token: string, id: at.GameId, stateUpdate: PlayStateUpdate) {
+  constructor(token: string, id: at.GameId, stateUpdate: tot.RawPlayStateUpdate) {
     let auth = { token };
 
     this.gameId = id;
@@ -20,7 +18,27 @@ export default class Play {
     this.stateUpdate = stateUpdate;
   }
 
-  respondGameState(state: at.GameState) {
+  async processActions(actions: Array<tot.PlayStateAction>) {
+    await Promise.all(actions.map(_ => {
+      if (tot.isPlayStateMove(_)) {
+        return this.move(_);
+      } else {
+        return this.chat(_.chat);
+      }
+    }))
+  }
+
+  async respondGameFull(data: at.GameFull) {
+    this.gameFull = data;
+
+    let actions = await this.stateUpdate.full(this.gameFull);
+
+    await this.processActions(actions);
+    
+    this.respondGameState(this.gameFull.state);
+  }
+  
+  async respondGameState(state: at.GameState) {
     if (!this.gameFull || state.status !== 'started') {
       this.abort?.();
       return;
@@ -28,15 +46,17 @@ export default class Play {
 
     this.gameFull.state.moves = state.moves;
 
-    let uci = this.stateUpdate(this.gameFull);
+    let actions = await this.stateUpdate.state(state);
 
-    if (uci) {
-      this.move(uci);
-    }
+    await this.processActions(actions);
   }
 
   move(uci: at.Uci, offeringDraw?: boolean) {
-    this.api.move(this.gameId, uci, offeringDraw);
+    return this.api.move(this.gameId, uci, offeringDraw);
+  }
+
+  chat(chat: string) {
+    // return this.api.chat(this.gameId, chat);
   }
 
   async play(timeout: number = 15 * tot.minutes) {
@@ -45,8 +65,7 @@ export default class Play {
 
     response.on('data', data => {
       if (at.isGameFull(data)) {
-        this.gameFull = data;
-        this.respondGameState(data.state);
+        this.respondGameFull(data);
       } else if (at.isGameState(data)) {
         this.respondGameState(data);
       } else if (at.isChatLine(data)) {

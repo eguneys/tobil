@@ -1,18 +1,18 @@
 import * as tot from './types';
 import { canAccept } from './accept';
 import { at, Bot as BotApi, Challenge as ChallengeApi } from 'apil';
-import Play, { PlayStateUpdate } from './play';
+import Play from './play';
 
 
 export default class Bot {
 
-  playStateUpdate: PlayStateUpdate
+  playStateUpdate: tot.RawPlayStateUpdate
   token: string
   api: BotApi
   challenge: ChallengeApi
   plays: Map<at.GameId, Play>
   
-  constructor(token: string, playStateUpdate: PlayStateUpdate) {
+  constructor(token: string, playStateUpdate: tot.RawPlayStateUpdate) {
     this.token = token;
     let auth = { token };
     

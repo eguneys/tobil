@@ -26,3 +26,33 @@ export function acceptConfig(opts: AcceptOptions): AcceptConfig {
     ...opts
   };
 }
+
+export type PlayStateMove = at.Uci
+export type PlayStateChat = {
+  chat: string
+}
+
+export type PlayStateAction = PlayStateMove | PlayStateChat
+
+export function isPlayStateMove(action: PlayStateAction): action is PlayStateMove {
+  return (typeof action === 'string');
+}
+
+export type RawPlayStateUpdate = {
+  full: (_: at.GameFull) => Promise<Array<PlayStateAction>>,
+  state: (_: at.GameState) => Promise<Array<PlayStateAction>>,
+  chat: (_: at.ChatLine) => Promise<Array<PlayStateAction>>
+}
+
+export type PlayStateUpdate = {
+  move: (turn: at.Color, state: PlayState) => Promise<Array<PlayStateAction>>,
+  chat: (_: at.ChatLine, state: PlayState) => Promise<Array<PlayStateAction>>
+}
+
+export type PlayState = {
+  pov: at.Color,
+  opponent: at.User,
+  initialTurn: at.Color,
+  initialFen: at.Fen,
+  moves: string
+}
