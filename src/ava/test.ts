@@ -19,8 +19,12 @@ test.cb.failing('accept challenge', t => {
   function chat(chatLine: at.ChatLine) {
     return Promise.resolve([]);
   }
+
+  function abort(status: at.GameStatus) {
+    return Promise.resolve();
+  }
   
-  let bot = new Bot(token, {full, state, chat});
+  let bot = new Bot(token, {full, state, chat, abort});
 
   bot.acceptChallenges({});
   

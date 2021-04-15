@@ -28,6 +28,11 @@ export default class Play {
     }))
   }
 
+  async respondGameChat(data: at.ChatLine) {
+    let actions = await this.stateUpdate.chat(data);
+    await this.processActions(actions);
+  }
+
   async respondGameFull(data: at.GameFull) {
     this.gameFull = data;
 
@@ -40,7 +45,7 @@ export default class Play {
   
   async respondGameState(state: at.GameState) {
     if (!this.gameFull || state.status !== 'started') {
-      this.abort?.();
+      this.respondGameAbort(state.status);
       return;
     }
 
@@ -51,12 +56,19 @@ export default class Play {
     await this.processActions(actions);
   }
 
+  async respondGameAbort(status: at.GameStatus) {
+    await this.stateUpdate.abort(status);
+    this.abort?.();
+  }
+
   move(uci: at.Uci, offeringDraw?: boolean) {
-    return this.api.move(this.gameId, uci, offeringDraw);
+    return this.api.move(this.gameId, uci, offeringDraw)
+      .catch(_ => console.error(`Move fail ${uci} : ${_}`));
   }
 
   chat(chat: string) {
-    // return this.api.chat(this.gameId, chat);
+    return this.api.chat(this.gameId, "player", chat)
+      .catch(_ => console.error(`Chat fail ${chat} : ${_}`));
   }
 
   async play(timeout: number = 15 * tot.minutes) {
@@ -69,7 +81,7 @@ export default class Play {
       } else if (at.isGameState(data)) {
         this.respondGameState(data);
       } else if (at.isChatLine(data)) {
-        
+        this.respondGameChat(data);
       }
     });
 

@@ -29,7 +29,8 @@ export function playStateUpdate(botId: string, playStateUpdate: tot.PlayStateUpd
       opponent,
       initialTurn,
       initialFen: data.initialFen,
-      moves: data.state.moves
+      moves: data.state.moves,
+      status: data.state.status
     };
 
     return Promise.resolve([]);
@@ -39,6 +40,7 @@ export function playStateUpdate(botId: string, playStateUpdate: tot.PlayStateUpd
     let evenTurn = (data.moves === '') || data.moves.split(' ').length % 2 === 0,
     turn = evenTurn ? playState.initialTurn : oppositeColor(playState.initialTurn);
     playState.moves = data.moves;
+    playState.status = data.status;
     
     return playStateUpdate.move(turn, playState);
   }
@@ -47,9 +49,14 @@ export function playStateUpdate(botId: string, playStateUpdate: tot.PlayStateUpd
     return playStateUpdate.chat(chatLine, playState);
   }
 
+  function abort(state: at.GameStatus) {
+    return playStateUpdate.abort(state, playState);
+  }
+
   return {
     full,
     state,
-    chat
+    chat,
+    abort
   };
 }

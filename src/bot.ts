@@ -58,7 +58,6 @@ export default class Bot {
       if (at.isGameStart(data)) {
         this.respondGameStart(data.game.id);
       } else if (at.isGameFinish(data)) {
-        
       } else if (at.isChallenge(data)) {
         let reason = canAccept(data, config);
         this.respondChallenge(data.challenge.id, reason);

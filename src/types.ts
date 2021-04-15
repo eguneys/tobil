@@ -38,15 +38,17 @@ export function isPlayStateMove(action: PlayStateAction): action is PlayStateMov
   return (typeof action === 'string');
 }
 
-export type RawPlayStateUpdate = {
+export interface RawPlayStateUpdate {
   full: (_: at.GameFull) => Promise<Array<PlayStateAction>>,
   state: (_: at.GameState) => Promise<Array<PlayStateAction>>,
-  chat: (_: at.ChatLine) => Promise<Array<PlayStateAction>>
+  chat: (_: at.ChatLine) => Promise<Array<PlayStateAction>>,
+  abort: (_: at.GameStatus) => Promise<void>
 }
 
-export type PlayStateUpdate = {
+export interface PlayStateUpdate {
   move: (turn: at.Color, state: PlayState) => Promise<Array<PlayStateAction>>,
-  chat: (_: at.ChatLine, state: PlayState) => Promise<Array<PlayStateAction>>
+  chat: (_: at.ChatLine, state: PlayState) => Promise<Array<PlayStateAction>>,
+  abort: (status: at.GameStatus, state: PlayState) => Promise<void>
 }
 
 export type PlayState = {
@@ -54,5 +56,6 @@ export type PlayState = {
   opponent: at.User,
   initialTurn: at.Color,
   initialFen: at.Fen,
-  moves: string
+  moves: string,
+  status: at.GameStatus
 }
